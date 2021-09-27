@@ -1,4 +1,4 @@
-# Python Package Template
+# Simple Matplotlib and OpenWeather API integration
 
 This program calls the OpenWeatherAPI to deliver a weather forecast for a choice of cities and displays a forecast for the next 48 hours.
 

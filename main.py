@@ -6,20 +6,19 @@ import requests
 import json
 
 # Dictionary of cities and coordinates. Note: While there is an OpenWeather API endpoint for calling by city name,
-# the free API only supports coordinates.
+# the free API only supports coordinates so only 3 cities have been chosen and their coordinates looked up.
 locations = {
     'london': (51.5230, 0.0803),
     'birmingham': (53.483959, -2.244644),
     'manchester': (52.489471, -1.898575)
 }
 
-
 def get_user_input():
     '''
     :return: city (str): User's input choice from a list of available cities
     '''
 
-    # always prompt the user for input if input isn't valid
+    # always prompt the user for input if input isn't valid. Allow the user to run simple test by typing 'test'
     while True:
         user_input_string = input(
             f'Please type the name of the city you want to see the weather forecast for. Options: {[name for name in locations.keys()]}. \n Type "test" to run test data.')
@@ -31,9 +30,14 @@ def get_user_input():
 
     return user_input_string
 
+def get_fallback_data():
+    print('There was an issue getting the data from the external source. Falling back to preloaded sample data...')
+    sample_file = open('sample_data.json', )
+    json_data = json.load(sample_file)
+    return json_data
 
 def get_data(user_input):
-    ''' Calls the OpenWeather API for the city chosen by looking up that city's coordinates and getting hte forecast for those coordinates.
+    ''' Calls the OpenWeather API for the city chosen by looking up that city's coordinates and getting the forecast for those coordinates.
     :param city (str): User's input choice of the city they want the forecast for.
     :return temp_dict (dictionary): A dictionary of  UNIX timestamps (keys) and temperatures in celsius (values)
         '''
@@ -49,14 +53,17 @@ def get_data(user_input):
     url_to_call = f'{base_url}?lat={lat}&lon={long}&exclude=current,daily,alerts,minutely&appid={api_key}'
 
     # Get response and convert to json
-    response = requests.get(url_to_call)
-
-    if response.status_code != 200:
-        print('There was an issue getting the data from the external source. Falling back to preloaded sample data...')
-        sample_file = open('sample_data.json', )
-        json_data = json.load(sample_file)
+    try:
+        response = requests.get(url_to_call)
+    except:
+        #If issue with API response (e.g. no internet) fallback to preloaded sample data
+        json_data = get_fallback_data()
     else:
-        json_data = response.json()
+        #Validate the API response and fallback to preloaded sample data if necessary
+        if response.status_code != 200:
+            json_data = get_fallback_data()
+        else:
+            json_data = response.json()
 
     return json_data
 
@@ -125,8 +132,8 @@ if __name__ == '__main__':
         #Plot created should be a flat/horizontal 20 celsius apart from the first and last datetimes at 10 celsius
         #To see if data is getting plotted as expected
         print('getting test data')
-        sample_file = open('test_data_1.json', )
-        json_data = json.load(sample_file)
+        test_file = open('test_data_1.json', )
+        json_data = json.load(test_file)
     else:
         # Collect data
         json_data = get_data(user_input)
